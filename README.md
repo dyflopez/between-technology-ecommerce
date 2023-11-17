@@ -71,6 +71,7 @@ Validar estado de salud del servicio
 - [Postman](https://www.postman.com/) - Plataforma de colaboración para el desarrollo de APIs.
 - [Mockito](https://site.mockito.org/) - Marco de prueba de Java.
 - [JUnit](https://junit.org/junit5/) - Marco de prueba para el lenguaje de programación Java.
+- [flyway](https://flywaydb.org/)) - Marco de prueba para el lenguaje de programación Java.
 
 
 
