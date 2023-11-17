@@ -1,0 +1,194 @@
+pipeline {
+    agent any
+    environment {
+        DOCKER_CREDS = credentials('docker-credentials')
+    }
+    tools {
+                maven 'maven-default'
+            }
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'GIT-CREDENTIAL-dyflopez',
+                    url: 'https://github.com/dyflopez/between-technology-ecommerce-test.git',
+                    branch: 'main'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                script {
+                    try {
+                        // Limpia y construye el proyecto
+                        sh 'mvn clean package'
+                        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                        // Opcionalmente, puedes omitir las pruebas si es necesario
+                        // sh 'mvn package -DskipTests'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la construcción del proyecto: ${e.message}")
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'scanner-default'
+                    withSonarQubeEnv('sonar-server-local') {
+                        sh """${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=labmaven01 \
+                            -Dsonar.projectName=labmaven01 \
+                            -Dsonar.sources=src/main \
+                            -Dsonar.sourceEncoding=UTF-8 \
+                            -Dsonar.language=java \
+                            -Dsonar.tests=src/test \
+                            -Dsonar.junit.reportsPath=target/surefire-reports \
+                            -Dsonar.surefire.reportsPath=target/surefire-reports \
+                            -Dsonar.jacoco.reportPath=target/jacoco.exec \
+                            -Dsonar.java.binaries=target/classes \
+                            -Dsonar.java.coveragePlugin=jacoco \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco.xml \
+                            -Dsonar.exclusions=**/*IT.java,**/*TEST.java,**/*Test.java,**/src/it**,**/src/test**,**/gradle/wrapper** \
+                            -Dsonar.java.libraries=target/*.jar"""
+                    }
+                }
+            }
+        }
+        stage('Build Image') {
+            steps {
+                script {
+                    try {
+                        sh 'docker build -t img_ms_ejemplo:V1 .'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la construcción de la imagen Docker: ${e.message}")
+                    }
+                }
+            }
+        }
+        stage('Publish Image') {
+            steps {
+                script {
+                    try {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        sh 'docker tag img_ms_ejemplo:V1 daniel0223/img_ms_ejemplo:V1'
+                        sh 'docker push daniel0223/img_ms_ejemplo:V1'
+                        sh 'docker logout'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la publicación de la imagen Docker: ${e.message}")
+                    }
+                }
+            }
+        }
+         stage('publicar') {
+            steps {
+                script {
+                    // Comando SSH para conectarte a la instancia EC2 y ejecutar 'ls'
+                    sshagent(credentials: ['ssh-ec2-agent']) {
+                        sh 'ssh -o StrictHostKeyChecking=no ubuntu@54.167.235.142 sudo docker run -d -p 9092:9092 --name ms-between-ecommerce daniel0223/img_between_ecommerce:V1'
+                    }
+                }
+            }
+        }
+    }
+}
+pipeline {
+    agent any
+    environment {
+        DOCKER_CREDS = credentials('docker-credentials')
+    }
+    tools {
+                maven 'maven-default'
+            }
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'GIT-CREDENTIAL-dyflopez',
+                    url: 'https://github.com/dyflopez/between-technology-ecommerce-test.git',
+                    branch: 'main'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                script {
+                    try {
+                        // Limpia y construye el proyecto
+                        sh 'mvn clean package'
+                        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                        // Opcionalmente, puedes omitir las pruebas si es necesario
+                        // sh 'mvn package -DskipTests'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la construcción del proyecto: ${e.message}")
+                    }
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'scanner-default'
+                    withSonarQubeEnv('sonar-server-local') {
+                        sh """${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=labmaven01 \
+                            -Dsonar.projectName=labmaven01 \
+                            -Dsonar.sources=src/main \
+                            -Dsonar.sourceEncoding=UTF-8 \
+                            -Dsonar.language=java \
+                            -Dsonar.tests=src/test \
+                            -Dsonar.junit.reportsPath=target/surefire-reports \
+                            -Dsonar.surefire.reportsPath=target/surefire-reports \
+                            -Dsonar.jacoco.reportPath=target/jacoco.exec \
+                            -Dsonar.java.binaries=target/classes \
+                            -Dsonar.java.coveragePlugin=jacoco \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco.xml \
+                            -Dsonar.exclusions=**/*IT.java,**/*TEST.java,**/*Test.java,**/src/it**,**/src/test**,**/gradle/wrapper** \
+                            -Dsonar.java.libraries=target/*.jar"""
+                    }
+                }
+            }
+        }
+        stage('Build Image') {
+            steps {
+                script {
+                    try {
+                        sh 'docker build -t img_ms_ejemplo:V1 .'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la construcción de la imagen Docker: ${e.message}")
+                    }
+                }
+            }
+        }
+        stage('Publish Image') {
+            steps {
+                script {
+                    try {
+                        sh 'docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}'
+                        sh 'docker tag img_ms_ejemplo:V1 daniel0223/img_ms_ejemplo:V1'
+                        sh 'docker push daniel0223/img_ms_ejemplo:V1'
+                        sh 'docker logout'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error en la publicación de la imagen Docker: ${e.message}")
+                    }
+                }
+            }
+        }
+         stage('publicar') {
+            steps {
+                script {
+                    // Comando SSH para conectarte a la instancia EC2 y ejecutar 'ls'
+                    sshagent(credentials: ['ssh-ec2-agent']) {
+                        sh 'ssh -o StrictHostKeyChecking=no ubuntu@54.167.235.142 sudo docker run -d -p 9092:9092 --name ms-between-ecommerce daniel0223/img_between_ecommerce:V1'
+                    }
+                }
+            }
+        }
+    }
+}
