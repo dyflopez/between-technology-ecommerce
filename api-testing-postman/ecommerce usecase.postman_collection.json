@@ -1,0 +1,110 @@
+{
+	"info": {
+		"_postman_id": "937e1504-84b7-485d-b836-2714f5e64925",
+		"name": "ecommerce usecase",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "29397036",
+		"_collection_link": "https://speeding-spaceship-741221.postman.co/workspace/Aulamatriz-Micro~da12c577-c32b-4d67-bf37-4d9650705c63/collection/29397036-937e1504-84b7-485d-b836-2714f5e64925?action=share&source=collection_link&creator=29397036"
+	},
+	"item": [
+		{
+			"name": "Test Case ok",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.globals.set(\"testBrandId\",1)",
+							"pm.globals.set(\"testProductId\",35455)",
+							"pm.globals.set(\"testApplicationDate\",\"2020-06-14T16:00:00.749Z\")"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"performance validation\", () => {",
+							"    pm.response.to.have.status(200);",
+							"    pm.expect(pm.response.responseTime).to.be.below(300);",
+							"});",
+							"",
+							"pm.test(\"data validation\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.testProductId = pm.globals.get(\"testProductId\");",
+							"    pm.expect(responseJson.brand).to.be.a('string');",
+							"    pm.expect(responseJson.productId).to.eql(pm.testProductId);",
+							"    pm.expect(responseJson.finalPrice).to.eql(25.45);",
+							"    pm.expect(responseJson.brand).to.eql('ZARA');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"brand_id\": {{testBrandId}},\n  \"application_date\": \"{{testApplicationDate}}\",\n  \"product_id\": {{testProductId}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{URL}}:{{PORT}}/api/v1/price/details"
+			},
+			"response": []
+		},
+		{
+			"name": "Test Case ok Copy",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"performance validation\", () => {",
+							"    pm.response.to.have.status(400);",
+							"    pm.expect(pm.response.responseTime).to.be.below(320);",
+							"});",
+							"",
+							"pm.test(\"data validation\", () => {",
+							"    const responseBody = pm.response.text();",
+							"",
+							"    pm.expect(responseBody).to.eql('Business error occurredThe details do not exist');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"brand_id\": 1,\n  \"application_date\": \"2020-06-14T16:00:00.749Z\",\n  \"product_id\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{URL}}:{{PORT}}/api/v1/price/details"
+			},
+			"response": []
+		}
+	]
+}
