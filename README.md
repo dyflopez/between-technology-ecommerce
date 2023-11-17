@@ -36,11 +36,11 @@ http://localhost:9092/swagger-ui/index.html#/
 
 ## Validar estado de salud del servicio
 
-http://localhost:9092/actuator/health
+http://54.167.235.142:9092/actuator/health
 
 ## Swagger
 
-http://localhost:9092/swagger-ui/index.html#/
+http://54.167.235.142:9092/swagger-ui/index.html#/
 - explore esribir  "/between-doc"
 - 
 La aplicación estará disponible en la siguiente URL:
